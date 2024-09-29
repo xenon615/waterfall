@@ -1,7 +1,7 @@
 # Waterfall
 Who has seen such big and round drops? That's right, no one, and who cares.  
 The question is, will these drops be able to fall from above, spinning the turbine (sort of a turbine), transmit rotation via the caterpillar to the generator and eventually light the lantern?
-And do all this using the bare physics that Avian3D provides without any other gadgets and trick.
+And do all this using the bare physics that Avian3D provides without any other gadgets and trick.  
 Answering this question, I learned a lot about Bevi, Avian3d and myself at the same time :)))
 
 
