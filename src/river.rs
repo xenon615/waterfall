@@ -3,13 +3,12 @@ use bevy::{
     prelude::*,
     pbr:: {NotShadowCaster, NotShadowReceiver}
 };
-use crate::{shared::{fibonacci_sphere, random_pos}, GameState, NotReady};
+use crate::{env::RiverSourceMarker, shared::{fibonacci_sphere, random_pos}, GameState, NotReady};
 
 pub struct  RiverPlugin;
 impl Plugin for RiverPlugin {
     fn build(&self, app: &mut App) {
         app
-        .register_type::<RiverSourceMarker>()
         .init_resource::<RiverSource>()
         .add_systems(Startup, startup)
         .add_systems(Update, setup.run_if(in_state(GameState::Loading)))
@@ -25,13 +24,8 @@ impl Plugin for RiverPlugin {
 #[derive(Component)]
 pub struct Drop;
 
-const DROP_RADIUS: f32 = 0.8;
-const DROPS_COUNT: usize = 1024;
-
-
-#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
-pub struct RiverSourceMarker;
+const DROP_RADIUS: f32 = 0.9;
+const DROPS_COUNT: usize = 512;
 
 #[derive(Resource, Default)]
 pub struct RiverSource(Vec3);
@@ -43,8 +37,6 @@ pub struct RiverNR;
 
 fn startup(
     mut cmd: Commands,
-   
-
 ) {
     cmd.spawn((NotReady, RiverNR));
 }
@@ -53,15 +45,14 @@ fn startup(
 
 fn setup(
     mut rs: ResMut<RiverSource>,
-    marker_q: Query<(Entity, &Transform), With<RiverSourceMarker>>,
+    marker_q: Single<(Entity, &Transform), With<RiverSourceMarker>>,
     mut cmd: Commands,
-    ready_q: Query<Entity, With<RiverNR>>
+    ready_q: Single<Entity, With<RiverNR>>
 ) {
-    if let Ok((e, mt)) =  marker_q.get_single() {
-        rs.0 = mt.translation;
-        cmd.entity(e).despawn_recursive();
-        cmd.entity(ready_q.get_single().unwrap()).despawn();
-    }
+    let (e, mt) = marker_q.into_inner();
+    rs.0 = mt.translation;
+    cmd.entity(e).despawn_recursive();
+    cmd.entity(ready_q.into_inner()).despawn();
 }
 
 // ---
@@ -81,12 +72,9 @@ fn enter_game(
 
     for p in fibonacci_sphere(DROPS_COUNT)  {
         cmd.spawn((
-            PbrBundle {
-                transform: Transform::from_translation(p * 20. + rs.0.with_y(200.)),
-                mesh: mesh.clone(),
-                material: material.clone(),
-                ..default()
-            },
+            Mesh3d(mesh.clone()),
+            MeshMaterial3d(material.clone()),
+            Transform::from_translation(p * 20. + rs.0.with_y(200.)),
             RigidBody::Dynamic,
             Collider::sphere(DROP_RADIUS),
             ColliderDensity(100.0),

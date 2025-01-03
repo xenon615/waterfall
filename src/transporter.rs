@@ -39,15 +39,9 @@ fn spawn(
     mut meshes: ResMut<Assets<Mesh>>,
 ) {
     cmd.spawn((
-        TransformBundle::from_transform(
-            Transform::from_xyz(0., 10., 0.)
-            // .with_rotation(Quat::from_rotation_y(-PI / 4.))
-        )
-        
-        ,
-        VisibilityBundle::default(),
-        Transporter,
-        Name::new("Transporter")
+        Transform::from_xyz(0., 10., 0.),
+        Visibility::Visible,
+        Transporter
     )).with_children(|parent| {
         let mut roll_pos_z = -TRANS_LEN / 2. ;
         // ---
@@ -79,12 +73,9 @@ fn spawn(
             }
     
             let track_id = parent.spawn((
-                PbrBundle {
-                    transform: Transform::from_translation(track_pos).with_rotation(Quat::from_rotation_x(next_angle)),
-                    mesh: track_mesh.clone(),
-                    material: track_mat.clone(),
-                    ..default()
-                },
+                Mesh3d(track_mesh.clone()),
+                MeshMaterial3d(track_mat.clone()),
+                Transform::from_translation(track_pos).with_rotation(Quat::from_rotation_x(next_angle)),
                 RigidBody::Dynamic,
                 GravityScale(0.5),
                 Collider::cuboid(track_x, track_y, track_z),
@@ -120,12 +111,9 @@ fn spawn(
     
         for idx in 0 .. ROLLS_COUNT {
             let roll_id = parent.spawn((
-                MaterialMeshBundle {
-                    transform: Transform::from_xyz(0., 0., roll_pos_z).with_rotation(Quat::from_rotation_z(PI / 2.)),
-                    mesh: roll_mesh.clone(),
-                    material: roll_mat.clone(),
-                    ..default()
-                },
+                Mesh3d(roll_mesh.clone()),
+                MeshMaterial3d(roll_mat.clone()),
+                Transform::from_xyz(0., 0., roll_pos_z).with_rotation(Quat::from_rotation_z(PI / 2.)),
                 RigidBody::Dynamic,
                 Collider::cylinder(roll_radius, ROLL_WIDTH),
                 Friction::new(1.0).with_combine_rule(CoefficientCombine::Max),
@@ -139,12 +127,9 @@ fn spawn(
                 for i in 0..2 {
                     let disk_sign = if i == 0 {-1.} else {1.};
                     r.spawn((
-                        MaterialMeshBundle {
-                            transform: Transform::from_xyz(0., disk_sign * ROLL_WIDTH / 2. + 0.1, 0.),
-                            mesh: disk_mesh.clone(),
-                            material: roll_mat.clone(),
-                            ..default()
-                        },
+                        Mesh3d(disk_mesh.clone()),
+                        MeshMaterial3d(roll_mat.clone()),
+                        Transform::from_xyz(0., disk_sign * ROLL_WIDTH / 2. + 0.1, 0.),
                         Collider::cylinder(roll_radius * 1.2, 0.2),
                         Friction::new(0.0).with_combine_rule(CoefficientCombine::Min),
                         Restitution::new(1.),
@@ -158,14 +143,9 @@ fn spawn(
             let bearing_side = if idx == 0 {-1.} else {1.};
             let bearing_offset = 8.0;
             let bearing_id = parent.spawn((
-                MaterialMeshBundle {
-                    transform: Transform::from_xyz(bearing_side * bearing_offset , 0.0, roll_pos_z)
-                    .with_rotation(Quat::from_rotation_z(PI / 2.))
-                    ,
-                    material: track_mat.clone(),
-                    mesh: meshes.add(Cuboid::from_length(0.5)),
-                    ..default()
-                },
+                Mesh3d(meshes.add(Cuboid::from_length(0.5))),
+                MeshMaterial3d(track_mat.clone()),
+                Transform::from_xyz(bearing_side * bearing_offset , 0.0, roll_pos_z).with_rotation(Quat::from_rotation_z(PI / 2.)),
                 RigidBody::Static,
                 GravityScale(0.),
                 Dominance(1),
@@ -183,6 +163,8 @@ fn spawn(
 
             roll_pos_z += roll_step;
         }
+
+
     });
 
 }
@@ -190,12 +172,8 @@ fn spawn(
 // ---
 
 fn setup(
-    mut transporter_q: Query<&mut Transform, With<Transporter>>,
-    stand_q: Query<&Transform, (With<TransporterStand>, Without<Transporter>)>,
+    transporter_q: Single<&mut Transform, With<Transporter>>,
+    stand_q: Single<&Transform, (With<TransporterStand>, Without<Transporter>)>,
 ) {
-    if let Ok(mut t) = transporter_q.get_single_mut() {
-        if let Ok(s) = stand_q.get_single() {
-            t.translation = s.translation;   
-        }
-    }
+    transporter_q.into_inner().translation = stand_q.into_inner().translation
 }

@@ -1,27 +1,23 @@
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 use avian3d::{
     // prelude::PhysicsDebugPlugin, 
     PhysicsPlugins
 };
-// use bevy_inspector_egui::{egui::show_tooltip, quick::WorldInspectorPlugin};
+
 use bevy::{
     prelude::*,
     window::{
-        // WindowResolution, 
-        WindowMode
+        WindowResolution, 
+        // WindowMode
     }
 };
-use bevy_gltf_components::ComponentsFromGltfPlugin;
-// use bevy_registry_export::ExportRegistryPlugin;
 
 mod shared;
 mod camera;
-// mod field;
 mod river;
 mod transporter;
 mod env;
 mod generator;
-mod scenario;
-mod camera_target;
 
 // ---
 
@@ -46,9 +42,10 @@ fn main() {
         DefaultPlugins.set(
             WindowPlugin {
                 primary_window : Some(Window {
-                    // resolution : WindowResolution::new(1400., 900.),
-                    mode: WindowMode::BorderlessFullscreen,
-                    // position: WindowPosition::Centered(MonitorSelection::Primary),
+                    canvas: Some("#game-canvas".into()),
+                    resolution : WindowResolution::new(1400., 900.),
+                    // mode: WindowMode::BorderlessFullscreen,
+                    position: WindowPosition::Centered(MonitorSelection::Primary),
 
                     ..default()
                 }),
@@ -58,19 +55,11 @@ fn main() {
         ),
         PhysicsPlugins::default(),
         // PhysicsDebugPlugin::default(),
-        // WorldInspectorPlugin::new(),
-        ComponentsFromGltfPlugin{legacy_mode: false},
-        // ExportRegistryPlugin::default(),
-
         river::RiverPlugin,
         camera::CameraPlugin,
-        // field::FieldPlugin,
         transporter::TransporterPlugin,
         env::EnvPlugin,
         generator::GeneratorPlugin,
-        scenario::ScenarioPlugin,
-        camera_target::CameraTargetPlugin
-
     ))
     .init_state::<GameState>()
     .add_systems(Update, check_ready.run_if(in_state(GameState::Loading)))
@@ -88,7 +77,7 @@ fn check_ready(
 
 ) {
     if not_ready_q.is_empty() {
-        // println!("GAME!");
+        println!("GAME!");
         next.set(GameState::Game);
     }
 }

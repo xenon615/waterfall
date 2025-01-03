@@ -1,35 +1,29 @@
-use bevy::prelude::*;
+use bevy::{
+    prelude::*, scene::SceneInstanceReady
+};
 use avian3d::prelude::*;
 
-use crate::{GameState, NotReady};
+use crate::NotReady;
 pub struct EnvPlugin;
 impl Plugin for EnvPlugin {
     fn build(&self, app: &mut App) {
         app
-        .register_type::<TransporterStand>()
-        .register_type::<Lantern>()
-        .register_type::<LanternLight>()
         .add_systems(Startup, startup)
-        .add_systems(Update, set_lanterns.run_if(in_state(GameState::Loading)))
-        .observe(collider_added)
+        .add_observer(collider_added)
         ;
     }
 }
 
 // ---
 
-#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
-pub struct TransporterStand;
-
-#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
-pub struct Lantern;
-
-#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
+#[derive(Component, Debug)]
 pub struct LanternLight;
 
+#[derive(Component, Debug)]
+pub struct TransporterStand;
+
+#[derive(Component, Debug)]
+pub struct RiverSourceMarker;
 
 #[derive(Component)]
 pub struct  HillNR;
@@ -37,39 +31,35 @@ pub struct  HillNR;
 #[derive(Component)]
 pub struct  LanternNR;
 
-
 // ---
-
 
 fn startup (
     mut cmd: Commands,
-    assets: ResMut<AssetServer>
+    assets: ResMut<AssetServer>,
+    mut al: ResMut<AmbientLight> 
 ) {
+    al.brightness = 40.;
     cmd.spawn((HillNR, NotReady));
     cmd.spawn((LanternNR, NotReady));
     cmd.spawn((
-        SceneBundle {
-            scene: assets.load(GltfAssetLabel::Scene(0).from_asset("models/scene.glb")),
-            ..default()
-        },
+        SceneRoot(assets.load(GltfAssetLabel::Scene(0).from_asset("models/scene.glb"))),
         ColliderConstructorHierarchy::new(None)
         .with_constructor_for_name("hill", ColliderConstructor::TrimeshFromMesh)
         ,
         RigidBody::Static,
-    ));
+        
+    ))
+    .observe(setup)
+    ;
 
-    cmd.spawn(
-        DirectionalLightBundle{
-            directional_light: DirectionalLight {
-                illuminance: 100.,
-                shadows_enabled: false,
-                ..default()
-            },
-            transform: Transform::from_rotation(Quat::from_rotation_x(-90_f32.to_radians())),
+    cmd.spawn((
+        DirectionalLight {
+            illuminance: 200.,
+            shadows_enabled: false,
             ..default()
-        }
-    );
-
+        },
+        Transform::from_rotation(Quat::from_rotation_x(-90_f32.to_radians()))
+    ));
 }
 
 // ---
@@ -78,61 +68,50 @@ fn collider_added(
     trg: Trigger<OnAdd, Collider>,
     q: Query<&Name>,
     mut  cmd: Commands,
-    ready_q: Query<Entity, With<HillNR>>
+    ready_q: Single<Entity, With<HillNR>>
 ) {
     if let Ok(name) = q.get(trg.entity()) {
         if name.contains("hill") {
-            if let Ok(e) = ready_q.get_single() {
-                // println!("hill ready");
-                cmd.entity(e).despawn();
-            } 
+            cmd.entity(ready_q.into_inner()).despawn();
         }
     }
 }
 
 // ---
 
-fn set_lanterns(
-    l_q : Query<(Entity, &Parent, &Transform), (With<LanternLight>, Without<SpotLight>)>,
-    mut commands: Commands,
-    ready_q : Query<Entity, (With<LanternNR>, With<NotReady>)>,
-    mut spawned: Local<bool>
+fn setup(
+    tr: Trigger<SceneInstanceReady>,
+    l_q : Query<(&Parent, &Transform, &GltfExtras)>,
+    children: Query<&Children>,
+    mut cmd: Commands,
+    ready_q: Single<Entity, With<LanternNR>>
 ) {
-
-    if l_q.is_empty() {
-        if *spawned {
-            if let Ok(re) = ready_q.get_single() {
-                commands.entity(re).despawn();
-                // println!("lantern ready");
-            }
-        }
-    } else {
-        *spawned = true;
-    }
-
-    for (e, p, t) in l_q.iter() {
-        let mut trans = t.with_rotation(Quat::from_rotation_x(-90_f32.to_radians()));
-        trans.translation.y = -0.6;
-
-        let plb = commands.spawn((
-            SpotLightBundle {
-                spot_light: SpotLight {
+    for c in children.iter_descendants_depth_first(tr.entity()) {
+        let Ok((p, t, se)) = l_q.get(c) else {
+            continue;
+        };
+        if se.value.contains("LanternLight") {
+            let mut trans = t.with_rotation(Quat::from_rotation_x(-90_f32.to_radians()));
+            trans.translation.y = -0.6;
+            let plb = cmd.spawn((
+                SpotLight {
                     color: Color::srgb(1., 0.64, 0.),
-                    intensity: 5_000_000.,
+                    intensity: 0.,
                     outer_angle: 2.8,
                     inner_angle: 4.5,
                     shadows_enabled: false,
                     ..default()
                 },
-                // visibility: Visibility::Hidden,
-                transform: trans,  
-                ..default()
-            },
-            LanternLight
-        )).id();
-
-        commands.entity(**p).add_child(plb);
-        commands.entity(e).despawn_recursive();
-
+                trans,
+                LanternLight
+            )).id();
+            cmd.entity(**p).add_child(plb);
+        } else if se.value.contains("TransporterStand") {
+            cmd.entity(c).insert(TransporterStand);
+        } else if se.value.contains("RiverSource") {
+            cmd.entity(c).insert(RiverSourceMarker);
+        }
     }
+    cmd.entity(ready_q.into_inner()).despawn();
+
 }

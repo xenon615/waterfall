@@ -4,7 +4,6 @@ The question is, will these drops be able to fall from above, spinning the turbi
 And do all this using the bare physics that Avian3D provides without any other gadgets and trick.  
 Answering this question, I learned a lot about Bevi, Avian3d and myself at the same time :)))
 
-
 ![waterfall](img/image.png)
 
 ## Note

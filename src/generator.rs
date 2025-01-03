@@ -43,7 +43,6 @@ fn startup (
 ) {
     cmd.spawn((NotReady, GeneratorNR));
     cmd.insert_resource(GeneratorGLTF(assets.load("models/generator.glb")));
-    
 }
 
 // ---
@@ -75,17 +74,14 @@ fn loaded (
 
             let part_sign = if idx == 0 {-1.} else {1.};
             let part_id = cmd.spawn((
-                PbrBundle {
-                    transform: Transform::from_translation( part_sign * Vec3::Y * 12.5)
-                    .with_rotation(Quat::from_rotation_x( -part_sign * PI / 2.)),
-                    mesh,
-                    visibility: Visibility::Hidden,
-                    material: mat.clone(),
-                    ..default()
-                },
+                Transform::from_translation( part_sign * Vec3::Y * 12.5).with_rotation(Quat::from_rotation_x( -part_sign * PI / 2.)),
+                Mesh3d(mesh),
+                MeshMaterial3d(mat.clone()),
+                Visibility::Hidden,
                 ColliderConstructor::TrimeshFromMesh,
                 Part(idx)
             )).id();   
+
             if idx == 1 {
                 cmd.entity(part_id).insert(Rotor);
             }
@@ -127,13 +123,10 @@ fn setup(
 // ---
 
 fn work(
-    r_q: Query<&AngularVelocity, With<Rotor>>,
+    r_q: Single<&AngularVelocity, With<Rotor>>,
     mut l_q: Query<&mut SpotLight, With<LanternLight>>
 ) {
-    let intensity =  if let Ok(av) = r_q.get_single() {
-        av.length_squared() *  10_000_000.
-    } else {0.};
-
+    let intensity = r_q.into_inner().length_squared() * 10_000_000.;
     for mut sl in l_q.iter_mut() {
         sl.intensity = intensity;     
     }
