@@ -1,0 +1,46 @@
+body {
+    background-color: #111;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: beige;
+    flex-direction: column;
+    font-size: 16px;
+}
+
+.header {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    align-items: center;
+}
+h2 {
+    margin: 10px;
+}
+.header .descr {
+    font-size: 1.1rem;
+    color: beige;
+    padding: 10px;
+    flex-basis: 1 0 100%;
+}
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 10px;
+}
+
+.controls > div {
+    margin: 5px;
+}
+canvas {
+    border: 1px white solid;
+}
+.inline-label {
+    font-weight: bold;
+    color: chocolate;
+}
+.inline-label2 {
+    color: cadetblue;
+}
