@@ -6,10 +6,10 @@ use avian3d::{
 
 use bevy::{
     prelude::*,
-    window::{
-        WindowResolution, 
+    // window::{
+        // WindowResolution, 
         // WindowMode
-    }
+    // }
 };
 
 mod shared;
@@ -43,7 +43,7 @@ fn main() {
             WindowPlugin {
                 primary_window : Some(Window {
                     canvas: Some("#game-canvas".into()),
-                    resolution : WindowResolution::new(1400., 900.),
+                    // resolution : WindowResolution::new(1400., 900.),
                     // mode: WindowMode::BorderlessFullscreen,
                     position: WindowPosition::Centered(MonitorSelection::Primary),
 

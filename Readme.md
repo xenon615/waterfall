@@ -4,7 +4,8 @@ The question is, will these drops be able to fall from above, spinning the turbi
 And do all this using the bare physics that Avian3D provides without any other gadgets and trick.  
 Answering this question, I learned a lot about Bevi, Avian3d and myself at the same time :)))
 
-![waterfall](img/image.png)
+![waterfall](img/image.png)  
+[Demo](https://xenon615.github.io/waterfall/)
 
 ## Note
 The hardest part here was making the damn caterpillar. I wanted to draw it in Blender like everything else, but there were a lot of problems with stretching it onto the rollers. It turned out that it was easier to create it at runtime.  

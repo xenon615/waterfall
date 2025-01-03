@@ -61,11 +61,12 @@ features = [
 "webgl2",	#Enable some limitations to be able to use WebGL2. Please refer to the WebGL2 and WebGPU section of the examples README for more information on how to run Wasm builds with WebGPU.
 # "x11	",	#X11 display server support
 "zstd",	
-"dynamic_linking",  #FOR DEBUG!!!
+# "dynamic_linking",  #FOR DEBUG!!!
 ]
 
 # wasm-bindgen --no-typescript --target web  --out-dir E:\dev\sources\rust\bevy\waterfall/web   --out-name "waterfall"  ./target/wasm32-unknown-unknown/release/waterfall.wasm
-#cargo build --target wasm32-unknown-unknown --release
+# cargo build --target wasm32-unknown-unknown --release
+
 
 
 

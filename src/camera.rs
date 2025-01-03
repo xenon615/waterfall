@@ -1,4 +1,3 @@
-use bevy::math::VectorSpace;
 use bevy::prelude::*;
 use bevy::core_pipeline::Skybox;
 use bevy::render::camera::{Exposure, PhysicalCameraParameters};
